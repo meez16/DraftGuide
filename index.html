@@ -1,0 +1,1226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2026 Fantasy Baseball Draft Board</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --green: #00c97a;
+  --red: #ff4d4d;
+  --yellow: #f5c518;
+  --blue: #4da6ff;
+  --orange: #ff8c42;
+  --purple: #b47fff;
+  --bg: #0d0f14;
+  --surface: #151820;
+  --surface2: #1c2030;
+  --border: #252a38;
+  --text: #e8eaf0;
+  --muted: #6b7280;
+  --panel-w: 380px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ── TOP BAR ── */
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 20px;
+  background: var(--surface);
+  border-bottom: 2px solid var(--green);
+  flex-shrink: 0;
+  gap: 16px;
+}
+
+.topbar-left h1 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 28px;
+  letter-spacing: 2px;
+  line-height: 1;
+}
+.topbar-left h1 span { color: var(--green); }
+.topbar-left p {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-top: 1px;
+}
+
+.topbar-stats {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+}
+
+.stat-pill {
+  text-align: center;
+}
+.stat-pill .num {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 24px;
+  line-height: 1;
+}
+.stat-pill .lbl {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.stat-pill .num.green { color: var(--green); }
+.stat-pill .num.yellow { color: var(--yellow); }
+.stat-pill .num.red { color: var(--red); }
+
+.legend {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  font-size: 10px;
+  font-family: 'DM Mono', monospace;
+  color: var(--muted);
+}
+.legend-item { display: flex; align-items: center; gap: 4px; cursor: default; }
+.legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+/* ── MAIN LAYOUT ── */
+.main {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* ── BOARD ── */
+.board {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  padding-right: 12px;
+}
+
+.board::-webkit-scrollbar { width: 6px; }
+.board::-webkit-scrollbar-track { background: var(--bg); }
+.board::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+.pos-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.pos-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+/* ── POSITION CARD ── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+
+.card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface2);
+}
+
+.card-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 18px;
+  letter-spacing: 1px;
+}
+
+.urgency {
+  font-size: 9px;
+  font-family: 'DM Mono', monospace;
+  padding: 2px 7px;
+  border-radius: 3px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 600;
+}
+.urgency.panic { background: rgba(255,77,77,.15); color: var(--red); border: 1px solid rgba(255,77,77,.3); }
+.urgency.early { background: rgba(245,197,24,.15); color: var(--yellow); border: 1px solid rgba(245,197,24,.3); }
+.urgency.wait  { background: rgba(0,201,122,.12); color: var(--green); border: 1px solid rgba(0,201,122,.25); }
+.urgency.mid   { background: rgba(77,166,255,.12); color: var(--blue); border: 1px solid rgba(77,166,255,.25); }
+
+/* ── SECTION LABEL ── */
+.sec-label {
+  padding: 3px 12px;
+  font-size: 9px;
+  font-family: 'DM Mono', monospace;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  background: rgba(255,255,255,.02);
+  border-bottom: 1px solid var(--border);
+}
+
+/* ── PLAYER ROW ── */
+.player {
+  display: flex;
+  align-items: center;
+  padding: 5px 12px;
+  gap: 8px;
+  border-bottom: 1px solid rgba(255,255,255,.03);
+  cursor: pointer;
+  transition: background 0.12s, opacity 0.2s;
+  user-select: none;
+  position: relative;
+}
+.player:last-child { border-bottom: none; }
+.player:hover { background: var(--surface2); }
+
+.tier-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.t1 { background: var(--green); }
+.t2 { background: var(--yellow); }
+.t3 { background: var(--blue); }
+.ts { background: var(--orange); }
+.tb { background: var(--red); }
+
+.player-name {
+  flex: 1;
+  font-weight: 500;
+  font-size: 12.5px;
+  transition: color 0.2s;
+}
+
+.player-note {
+  color: var(--muted);
+  font-size: 10px;
+  font-family: 'DM Mono', monospace;
+  text-align: right;
+  max-width: 130px;
+}
+
+.player-tag {
+  font-size: 8px;
+  font-family: 'DM Mono', monospace;
+  padding: 1px 5px;
+  border-radius: 3px;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  flex-shrink: 0;
+}
+.tag-sleeper { background: rgba(255,140,66,.15); color: var(--orange); }
+.tag-bust    { background: rgba(255,77,77,.15); color: var(--red); }
+.tag-value   { background: rgba(77,166,255,.15); color: var(--blue); }
+.tag-added   { background: rgba(0,201,122,.15); color: var(--green); }
+
+/* ── PLAYER STATES ── */
+.player.drafted-other {
+  opacity: 0.35;
+}
+.player.drafted-other .player-name {
+  text-decoration: line-through;
+  color: var(--muted);
+}
+.player.drafted-other::after {
+  content: 'GONE';
+  position: absolute;
+  right: 12px;
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  color: var(--red);
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+
+.player.drafted-us {
+  background: rgba(0,201,122,.07);
+}
+.player.drafted-us .player-name {
+  color: var(--green);
+}
+.player.drafted-us::after {
+  content: '✓ OURS';
+  position: absolute;
+  right: 12px;
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  color: var(--green);
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+.player.drafted-us .player-note { display: none; }
+.player.drafted-us .player-tag { display: none; }
+
+/* ── CLICK HINT ── */
+.click-hint {
+  text-align: center;
+  font-size: 9px;
+  font-family: 'DM Mono', monospace;
+  color: var(--border);
+  padding: 4px;
+  letter-spacing: 1px;
+}
+
+/* ── MY ROSTER SIDEBAR ── */
+.sidebar {
+  width: var(--panel-w);
+  border-left: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  flex-shrink: 0;
+}
+
+.sidebar-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.tab-btn {
+  flex: 1;
+  padding: 10px;
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 16px;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: color .2s, background .2s;
+  border-bottom: 2px solid transparent;
+}
+.tab-btn:hover { color: var(--text); background: var(--surface2); }
+.tab-btn.active { color: var(--green); border-bottom-color: var(--green); }
+
+/* ── ROSTER TAB ── */
+.tab-content { display: none; flex: 1; overflow-y: auto; flex-direction: column; }
+.tab-content.active { display: flex; }
+.tab-content::-webkit-scrollbar { width: 4px; }
+.tab-content::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+.roster-list {
+  padding: 10px;
+  flex: 1;
+}
+
+.roster-slot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  margin-bottom: 4px;
+  border-radius: 6px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  min-height: 34px;
+}
+
+.slot-pos {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 14px;
+  color: var(--muted);
+  width: 30px;
+  flex-shrink: 0;
+}
+
+.slot-name {
+  flex: 1;
+  font-size: 12px;
+  font-weight: 500;
+}
+.slot-name.empty { color: var(--border); font-style: italic; font-weight: 400; }
+.slot-name.filled { color: var(--green); }
+
+.slot-pos-tag {
+  font-size: 9px;
+  font-family: 'DM Mono', monospace;
+  color: var(--muted);
+  background: var(--bg);
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+
+.roster-header {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 13px;
+  letter-spacing: 1.5px;
+  color: var(--muted);
+  padding: 6px 10px 2px;
+  margin-top: 4px;
+}
+
+/* ── AI CHAT TAB ── */
+.chat-area {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.chat-area::-webkit-scrollbar { width: 4px; }
+.chat-area::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+.chat-msg {
+  max-width: 100%;
+  animation: fadeUp 0.2s ease;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.chat-msg.user {
+  align-self: flex-end;
+}
+
+.chat-bubble {
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.chat-msg.user .chat-bubble {
+  background: var(--green);
+  color: #0d0f14;
+  font-weight: 500;
+  border-bottom-right-radius: 3px;
+}
+
+.chat-msg.ai .chat-bubble {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-bottom-left-radius: 3px;
+}
+
+.chat-sender {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  color: var(--muted);
+  margin-bottom: 3px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.chat-msg.user .chat-sender { text-align: right; }
+
+.typing-indicator {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  padding: 10px 12px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  border-bottom-left-radius: 3px;
+  width: fit-content;
+}
+
+.typing-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--muted);
+  animation: typingBounce 1.2s infinite;
+}
+.typing-dot:nth-child(2) { animation-delay: .2s; }
+.typing-dot:nth-child(3) { animation-delay: .4s; }
+
+@keyframes typingBounce {
+  0%, 60%, 100% { transform: translateY(0); opacity: .5; }
+  30% { transform: translateY(-5px); opacity: 1; }
+}
+
+.quick-qs {
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.quick-q-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.quick-q-btn {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 5px 10px;
+  color: var(--text);
+  font-size: 11px;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color .15s, background .15s;
+  font-family: 'DM Sans', sans-serif;
+}
+.quick-q-btn:hover { border-color: var(--green); background: rgba(0,201,122,.05); color: var(--green); }
+
+.chat-input-row {
+  display: flex;
+  gap: 8px;
+  padding: 10px 12px;
+  border-top: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.chat-input {
+  flex: 1;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  color: var(--text);
+  font-size: 12px;
+  font-family: 'DM Sans', sans-serif;
+  outline: none;
+  resize: none;
+  transition: border-color .15s;
+  height: 38px;
+  min-height: 38px;
+  max-height: 100px;
+}
+.chat-input:focus { border-color: var(--green); }
+.chat-input::placeholder { color: var(--muted); }
+
+.send-btn {
+  background: var(--green);
+  border: none;
+  border-radius: 8px;
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: opacity .15s, transform .1s;
+  color: #0d0f14;
+}
+.send-btn:hover { opacity: .85; }
+.send-btn:active { transform: scale(.95); }
+.send-btn:disabled { opacity: .4; cursor: not-allowed; }
+.send-btn svg { width: 16px; height: 16px; }
+
+/* ── ROUND GUIDE ── */
+.rounds-section { margin-bottom: 12px; }
+.section-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 22px;
+  letter-spacing: 2px;
+  color: var(--text);
+  margin-bottom: 8px;
+  padding: 0 2px;
+}
+.section-title span { color: var(--green); }
+
+.rounds-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.round-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.round-head {
+  background: var(--surface2);
+  padding: 6px 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+}
+
+.round-num {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 20px;
+  color: var(--green);
+  line-height: 1;
+}
+
+.round-focus {
+  font-size: 9px;
+  font-family: 'DM Mono', monospace;
+  color: var(--yellow);
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  text-align: right;
+  max-width: 80px;
+}
+
+.round-body {
+  padding: 8px 10px;
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.round-body strong { color: var(--text); font-size: 11px; }
+
+/* scrollbar for board */
+.board::-webkit-scrollbar { width: 5px; }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="topbar-left">
+    <h1>2026 <span>DRAFT</span> BOARD</h1>
+    <p>10-Team H2H · R/HR/RBI/SB/AVG/OPS · W/SV/K/ERA/WHIP/QS</p>
+  </div>
+  <div class="topbar-stats">
+    <div class="stat-pill">
+      <div class="num green" id="stat-ours">0</div>
+      <div class="lbl">Our Picks</div>
+    </div>
+    <div class="stat-pill">
+      <div class="num red" id="stat-gone">0</div>
+      <div class="lbl">Off Board</div>
+    </div>
+    <div class="stat-pill">
+      <div class="num yellow" id="stat-avail">—</div>
+      <div class="lbl">Available</div>
+    </div>
+  </div>
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:var(--surface2);border:1px solid var(--muted)"></div> Click once = GONE</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div> Click twice = OURS</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--border)"></div> Click 3x = Reset</div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- DRAFT BOARD -->
+  <div class="board" id="board">
+
+    <!-- 3-col position cards -->
+    <div class="pos-grid">
+      <!-- SHORTSTOP -->
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title" style="color:var(--red)">SHORTSTOP</div>
+          <span class="urgency panic">🚨 PANIC</span>
+        </div>
+        <div class="sec-label">Tier 1 — Must Grab Early</div>
+        <div class="player" data-id="witt"><div class="tier-dot t1"></div><span class="player-name">Bobby Witt Jr.</span><span class="player-note">.332/33HR/31SB</span></div>
+        <div class="player" data-id="gunnar"><div class="tier-dot t1"></div><span class="player-name">Gunnar Henderson</span><span class="player-note">Prefer over Lindor</span></div>
+        <div class="player" data-id="seager"><div class="tier-dot t1"></div><span class="player-name">Corey Seager</span><span class="player-note">Elite OPS if healthy</span></div>
+        <div class="player" data-id="neto"><div class="tier-dot t1"></div><span class="player-name">Zach Neto</span><span class="player-note">Good alt to Lindor</span></div>
+        <div class="player" data-id="tturner"><div class="tier-dot t2"></div><span class="player-name">Trae Turner</span><span class="player-note">Last of early tier</span></div>
+        <div class="sec-label">Tier 2 — Accept If They Fall</div>
+        <div class="player" data-id="volpe"><div class="tier-dot t3"></div><span class="player-name">Anthony Volpe</span><span class="player-note">Speed + pop</span></div>
+        <div class="player" data-id="lindor"><div class="tier-dot t3"></div><span class="player-name">Francisco Lindor</span><span class="player-note">Only if pair w/ Neto</span></div>
+        <div class="player" data-id="mookie"><div class="tier-dot t3"></div><span class="player-name">Mookie Betts</span><span class="player-note">Late R4, SS eligible</span></div>
+        <div class="sec-label">Sleepers / Busts</div>
+        <div class="player" data-id="jwilson"><div class="tier-dot ts"></div><span class="player-name">Jacob Wilson</span><span class="player-tag tag-sleeper">Sleeper</span></div>
+        <div class="player" data-id="wynn"><div class="tier-dot ts"></div><span class="player-name">Mason Wynn</span><span class="player-tag tag-sleeper">Sleeper</span></div>
+        <div class="player" data-id="tovar"><div class="tier-dot ts"></div><span class="player-name">Ezequiel Tovar</span><span class="player-tag tag-sleeper">Coors factor</span></div>
+        <div class="player" data-id="story"><div class="tier-dot tb"></div><span class="player-name">Trevor Story</span><span class="player-tag tag-bust">Bust</span></div>
+        <div class="player" data-id="abrams"><div class="tier-dot tb"></div><span class="player-name">CJ Abrams</span><span class="player-tag tag-bust">Hard Pass</span></div>
+        <div class="click-hint">click to mark · 1x gone · 2x ours · 3x reset</div>
+      </div>
+
+      <!-- OUTFIELD -->
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title" style="color:var(--blue)">OUTFIELD</div>
+          <span class="urgency early">⚡ EARLY</span>
+        </div>
+        <div class="sec-label">Tier 1 — Top Priority</div>
+        <div class="player" data-id="yordan"><div class="tier-dot t1"></div><span class="player-name">Yordan Alvarez</span><span class="player-note">Best OPS cat bat</span></div>
+        <div class="player" data-id="julio"><div class="tier-dot t1"></div><span class="player-name">Julio Rodriguez</span><span class="player-note">Speed + power</span></div>
+        <div class="player" data-id="tucker"><div class="tier-dot t1"></div><span class="player-name">Kyle Tucker</span><span class="player-note">AVG/OPS monster</span></div>
+        <div class="player" data-id="acuna"><div class="tier-dot t1"></div><span class="player-name">Ronald Acuña Jr.</span><span class="player-note">R1 if healthy</span></div>
+        <div class="sec-label">Tier 2</div>
+        <div class="player" data-id="greene"><div class="tier-dot t2"></div><span class="player-name">Riley Greene</span><span class="player-note">30 HR upside</span></div>
+        <div class="player" data-id="harris"><div class="tier-dot t2"></div><span class="player-name">Michael Harris II</span><span class="player-note">Strong 2H 2025</span></div>
+        <div class="player" data-id="aroz"><div class="tier-dot t2"></div><span class="player-name">Randy Arozarena</span><span class="player-note">27HR/31SB</span></div>
+        <div class="player" data-id="yelich"><div class="tier-dot t2"></div><span class="player-name">Christian Yelich</span><span class="player-note">29HR bounce-back</span></div>
+        <div class="sec-label">Added — Overlooked Names</div>
+        <div class="player" data-id="robert"><div class="tier-dot ts"></div><span class="player-name">Luis Robert Jr.</span><span class="player-tag tag-added">Added</span><span class="player-note">Mets, 33SB/14HR</span></div>
+        <div class="player" data-id="laureano"><div class="tier-dot ts"></div><span class="player-name">Roman Laureano</span><span class="player-tag tag-added">Added</span><span class="player-note">#29 OF, underrated</span></div>
+        <div class="player" data-id="burleson"><div class="tier-dot ts"></div><span class="player-name">Nicky Burleson</span><span class="player-tag tag-added">Added</span><span class="player-note">25-30 HR upside</span></div>
+        <div class="player" data-id="lile"><div class="tier-dot ts"></div><span class="player-name">Dylan Lile</span><span class="player-tag tag-sleeper">Sleeper</span><span class="player-note">Elite speed</span></div>
+        <div class="click-hint">click to mark · 1x gone · 2x ours · 3x reset</div>
+      </div>
+
+      <!-- FIRST BASE -->
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title" style="color:var(--yellow)">FIRST BASE</div>
+          <span class="urgency early">⚡ EARLY</span>
+        </div>
+        <div class="sec-label">Tier 1</div>
+        <div class="player" data-id="vladdy"><div class="tier-dot t1"></div><span class="player-name">Vladimir Guerrero Jr.</span><span class="player-note">Safe floor</span></div>
+        <div class="player" data-id="kurtz"><div class="tier-dot t1"></div><span class="player-name">Nick Kurtz</span><span class="player-note">Ballpark love</span></div>
+        <div class="player" data-id="alonso"><div class="tier-dot t1"></div><span class="player-name">Pete Alonso</span><span class="player-note">Only at value</span></div>
+        <div class="sec-label">Tier 2</div>
+        <div class="player" data-id="olson"><div class="tier-dot t2"></div><span class="player-name">Matt Olson</span><span class="player-note">Best value T2</span></div>
+        <div class="player" data-id="devers"><div class="tier-dot t2"></div><span class="player-name">Rafael Devers</span><span class="player-note">4 yrs younger than Harper</span></div>
+        <div class="player" data-id="harper"><div class="tier-dot t2"></div><span class="player-name">Bryce Harper</span><span class="player-note">Aging, injury-prone</span></div>
+        <div class="player" data-id="freeman"><div class="tier-dot t2"></div><span class="player-name">Freddie Freeman</span><span class="player-note">Good floor, capped ceiling</span></div>
+        <div class="sec-label">Last Chance / Sleepers</div>
+        <div class="player" data-id="vp"><div class="tier-dot t3"></div><span class="player-name">Vinnie Pasquantino</span><span class="player-note">Safe floor</span></div>
+        <div class="player" data-id="soder"><div class="tier-dot t3"></div><span class="player-name">Tyler Soderstrom</span><span class="player-note">Higher upside</span></div>
+        <div class="player" data-id="burger"><div class="tier-dot ts"></div><span class="player-name">Jake Burger</span><span class="player-tag tag-sleeper">Sleeper</span></div>
+        <div class="player" data-id="wcontreras"><div class="tier-dot ts"></div><span class="player-name">Wilson Contreras</span><span class="player-tag tag-sleeper">Sleeper</span></div>
+        <div class="player" data-id="naylor"><div class="tier-dot tb"></div><span class="player-name">Josh Naylor</span><span class="player-tag tag-bust">Too expensive</span></div>
+        <div class="click-hint">click to mark · 1x gone · 2x ours · 3x reset</div>
+      </div>
+    </div>
+
+    <!-- 3-col row 2 -->
+    <div class="pos-grid">
+      <!-- THIRD BASE -->
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title" style="color:var(--orange)">THIRD BASE</div>
+          <span class="urgency mid">→ MID</span>
+        </div>
+        <div class="sec-label">Tier 1 (R1 Only)</div>
+        <div class="player" data-id="jram"><div class="tier-dot t1"></div><span class="player-name">José Ramírez</span><span class="player-note">R1 pick — don't pass</span></div>
+        <div class="sec-label">Tier 2</div>
+        <div class="player" data-id="caminero"><div class="tier-dot t2"></div><span class="player-name">Junior Caminero</span><span class="player-note">Stud, fewer HRs now</span></div>
+        <div class="player" data-id="riley"><div class="tier-dot t2"></div><span class="player-name">Austin Riley</span><span class="player-note">Riley > Garcia</span></div>
+        <div class="player" data-id="garcia3b"><div class="tier-dot t2"></div><span class="player-name">Adolis García</span><span class="player-note">Power upside</span></div>
+        <div class="sec-label">Tier 3 — Safe Mid Picks</div>
+        <div class="player" data-id="chapman3b"><div class="tier-dot t3"></div><span class="player-name">Matt Chapman</span><span class="player-note">Safest of group</span></div>
+        <div class="player" data-id="paredes"><div class="tier-dot t3"></div><span class="player-name">Isaac Paredes</span><span class="player-note">Consistent floor</span></div>
+        <div class="player" data-id="rlewis"><div class="tier-dot t3"></div><span class="player-name">Royce Lewis</span><span class="player-note">Upside if healthy</span></div>
+        <div class="sec-label">Sleepers / Busts</div>
+        <div class="player" data-id="durbin"><div class="tier-dot ts"></div><span class="player-name">Caleb Durbin</span><span class="player-tag tag-sleeper">Sleeper</span></div>
+        <div class="player" data-id="vargas3b"><div class="tier-dot ts"></div><span class="player-name">Vargas</span><span class="player-tag tag-sleeper">Sleeper</span></div>
+        <div class="player" data-id="bregman"><div class="tier-dot tb"></div><span class="player-name">Alex Bregman</span><span class="player-tag tag-bust">Fade at ADP</span></div>
+        <div class="player" data-id="suarez3b"><div class="tier-dot tb"></div><span class="player-name">Eugenio Suárez</span><span class="player-tag tag-bust">Fade at ADP</span></div>
+        <div class="click-hint">click to mark · 1x gone · 2x ours · 3x reset</div>
+      </div>
+
+      <!-- SECOND BASE -->
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title" style="color:var(--green)">SECOND BASE</div>
+          <span class="urgency wait">✓ WAIT</span>
+        </div>
+        <div class="sec-label">Tier 1</div>
+        <div class="player" data-id="marte2b"><div class="tier-dot t1"></div><span class="player-name">Ketel Marte</span><span class="player-note">OPS monster</span></div>
+        <div class="player" data-id="jazz"><div class="tier-dot t1"></div><span class="player-name">Jazz Chisholm Jr.</span><span class="player-note">Contract year ✓</span></div>
+        <div class="sec-label">Tier 2</div>
+        <div class="player" data-id="turang"><div class="tier-dot t2"></div><span class="player-name">Brice Turang</span><span class="player-note">Could be best 2B</span></div>
+        <div class="player" data-id="holliday"><div class="tier-dot t2"></div><span class="player-name">Jackson Holliday</span><span class="player-note">Reach but high ceiling</span></div>
+        <div class="sec-label">Value / Sleepers</div>
+        <div class="player" data-id="stott"><div class="tier-dot t3"></div><span class="player-name">Brendan Stott</span><span class="player-note">Best floor, low risk</span></div>
+        <div class="player" data-id="mclain"><div class="tier-dot t3"></div><span class="player-name">Tyler McLain</span><span class="player-tag tag-value">Best Value</span></div>
+        <div class="player" data-id="torres"><div class="tier-dot t3"></div><span class="player-name">Gleyber Torres</span><span class="player-tag tag-value">Contract year</span></div>
+        <div class="player" data-id="ozzie"><div class="tier-dot ts"></div><span class="player-name">Ozzie Albies</span><span class="player-tag tag-sleeper">Sleeper</span></div>
+        <div class="player" data-id="semien"><div class="tier-dot ts"></div><span class="player-name">Marcus Semien</span><span class="player-tag tag-added">Added</span></div>
+        <div class="player" data-id="altuve"><div class="tier-dot ts"></div><span class="player-name">José Altuve</span><span class="player-tag tag-added">Floor guy</span></div>
+        <div class="player" data-id="edwards2b"><div class="tier-dot tb"></div><span class="player-name">Xavier Edwards</span><span class="player-tag tag-bust">Zero power</span></div>
+        <div class="click-hint">click to mark · 1x gone · 2x ours · 3x reset</div>
+      </div>
+
+      <!-- CATCHER -->
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title" style="color:var(--muted)">CATCHER</div>
+          <span class="urgency wait">✓ WAIT</span>
+        </div>
+        <div class="sec-label">Only If Perfect Value</div>
+        <div class="player" data-id="raleigh"><div class="tier-dot t1"></div><span class="player-name">Cal Raleigh</span><span class="player-note">Won't get R2</span></div>
+        <div class="player" data-id="wcontreras2"><div class="tier-dot t2"></div><span class="player-name">William Contreras</span><span class="player-note">Bounce-back pick</span></div>
+        <div class="sec-label">Strong Late Value</div>
+        <div class="player" data-id="benrice"><div class="tier-dot t3"></div><span class="player-name">Ben Rice</span><span class="player-tag tag-value">Love him</span></div>
+        <div class="player" data-id="rutsch"><div class="tier-dot t3"></div><span class="player-name">Adley Rutschman</span><span class="player-tag tag-value">People hate = value</span></div>
+        <div class="player" data-id="shea"><div class="tier-dot t3"></div><span class="player-name">Shea Langeliers</span><span class="player-note">Good ballpark</span></div>
+        <div class="player" data-id="ydiaz"><div class="tier-dot t3"></div><span class="player-name">Yainer Diaz</span></div>
+        <div class="player" data-id="moreno"><div class="tier-dot t3"></div><span class="player-name">Gabriel Moreno</span></div>
+        <div class="player" data-id="wsmith"><div class="tier-dot t3"></div><span class="player-name">Will Smith</span><span class="player-note">Perfect sleeper value</span></div>
+        <div class="player" data-id="awells"><div class="tier-dot t3"></div><span class="player-name">Austin Wells</span></div>
+        <div class="player" data-id="jeffers"><div class="tier-dot ts"></div><span class="player-name">Ryan Jeffers</span><span class="player-tag tag-added">Added</span></div>
+        <div class="player" data-id="goodman"><div class="tier-dot ts"></div><span class="player-name">Hunter Goodman</span><span class="player-tag tag-added">Power upside</span></div>
+        <div class="player" data-id="jensen"><div class="tier-dot tb"></div><span class="player-name">Carter Jensen</span><span class="player-tag tag-bust">Avoid</span></div>
+        <div class="click-hint">click to mark · 1x gone · 2x ours · 3x reset</div>
+      </div>
+    </div>
+
+    <!-- 2-col pitching -->
+    <div class="pos-grid-2">
+      <!-- SP -->
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title" style="color:var(--orange)">STARTING PITCHERS</div>
+          <span class="urgency early">⚡ EARLY</span>
+        </div>
+        <div class="sec-label">Elite — W/K/ERA/WHIP/QS all count</div>
+        <div class="player" data-id="skenes"><div class="tier-dot t1"></div><span class="player-name">Paul Skenes</span><span class="player-note">Top 2 pitcher</span></div>
+        <div class="player" data-id="skubal"><div class="tier-dot t1"></div><span class="player-name">Tarik Skubal</span><span class="player-note">Top 2 pitcher</span></div>
+        <div class="player" data-id="yamamoto"><div class="tier-dot t1"></div><span class="player-name">Yoshinobu Yamamoto</span><span class="player-note">Sub-3 xERA</span></div>
+        <div class="player" data-id="crochet"><div class="tier-dot t1"></div><span class="player-name">Garrett Crochet</span><span class="player-note">Prime age, elite</span></div>
+        <div class="sec-label">Tier 2</div>
+        <div class="player" data-id="cole"><div class="tier-dot t2"></div><span class="player-name">Gerrit Cole</span><span class="player-note">If healthy</span></div>
+        <div class="player" data-id="fried"><div class="tier-dot t2"></div><span class="player-name">Max Fried</span><span class="player-note">Elite ratios</span></div>
+        <div class="player" data-id="gausman"><div class="tier-dot t2"></div><span class="player-name">Kevin Gausman</span><span class="player-note">Consistent K</span></div>
+        <div class="player" data-id="webb"><div class="tier-dot t2"></div><span class="player-name">Logan Webb</span><span class="player-note">QS machine</span></div>
+        <div class="player" data-id="valdez"><div class="tier-dot t2"></div><span class="player-name">Freddy Valdez</span><span class="player-note">Strong mid-round arm</span></div>
+        <div class="sec-label">Tier 3 / Added</div>
+        <div class="player" data-id="luzardo"><div class="tier-dot t3"></div><span class="player-name">Jesus Luzardo</span><span class="player-note">Mid-3 ERA healthy</span></div>
+        <div class="player" data-id="ragans"><div class="tier-dot t3"></div><span class="player-name">Cole Ragans</span><span class="player-note">Movement + age</span></div>
+        <div class="player" data-id="eovaldi"><div class="tier-dot t3"></div><span class="player-name">Nathan Eovaldi</span><span class="player-note">Consistent vet</span></div>
+        <div class="player" data-id="chandler"><div class="tier-dot t3"></div><span class="player-name">Bubba Chandler</span><span class="player-note">High upside late</span></div>
+        <div class="player" data-id="boyd"><div class="tier-dot ts"></div><span class="player-name">Matthew Boyd</span><span class="player-tag tag-added">14W 2025, low ADP</span></div>
+        <div class="player" data-id="trogers"><div class="tier-dot ts"></div><span class="player-name">Trevor Rogers</span><span class="player-tag tag-added">Excellent 2025</span></div>
+        <div class="click-hint">click to mark · 1x gone · 2x ours · 3x reset</div>
+      </div>
+
+      <!-- RP -->
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title" style="color:var(--muted)">RELIEF PITCHERS</div>
+          <span class="urgency mid">→ MID</span>
+        </div>
+        <div class="sec-label">Elite Closers — grab 1-2 max</div>
+        <div class="player" data-id="ediaz"><div class="tier-dot t1"></div><span class="player-name">Edwin Díaz</span><span class="player-note">Dodgers — automatic</span></div>
+        <div class="player" data-id="mmiller"><div class="tier-dot t1"></div><span class="player-name">Mason Miller</span><span class="player-note">Elite K rate</span></div>
+        <div class="player" data-id="munoz"><div class="tier-dot t1"></div><span class="player-name">Andrés Muñoz</span><span class="player-note">Elite</span></div>
+        <div class="sec-label">Strong Closers</div>
+        <div class="player" data-id="duran"><div class="tier-dot t2"></div><span class="player-name">Jhoan Durán</span><span class="player-note">Filthy stuff</span></div>
+        <div class="player" data-id="dWilliams"><div class="tier-dot t2"></div><span class="player-name">Devin Williams</span><span class="player-note">When healthy</span></div>
+        <div class="player" data-id="achapman"><div class="tier-dot t2"></div><span class="player-name">Aroldis Chapman</span><span class="player-note">Closing upside</span></div>
+        <div class="player" data-id="csmith"><div class="tier-dot t2"></div><span class="player-name">Cade Smith</span><span class="player-note">40+ SV upside</span></div>
+        <div class="sec-label">Streamers / Speculative</div>
+        <div class="player" data-id="rwalker"><div class="tier-dot t3"></div><span class="player-name">Ryan Walker</span><span class="player-note">Giants, 30+ SV</span></div>
+        <div class="player" data-id="rsuarez"><div class="tier-dot t3"></div><span class="player-name">Ranger Suárez</span><span class="player-note">Low ADP gamble</span></div>
+        <div class="sec-label">Strategy Note</div>
+        <div class="player" style="cursor:default; background:rgba(255,255,255,.02)">
+          <span class="player-name" style="color:var(--muted); font-size:11px; line-height:1.5">Grab 1-2 elite closers. Use 4 P slots to stream for ERA/WHIP/K. Don't overdraft saves.</span>
+        </div>
+        <div class="click-hint">click to mark · 1x gone · 2x ours · 3x reset</div>
+      </div>
+    </div>
+
+    <!-- Round Guide -->
+    <div class="rounds-section">
+      <div class="section-title">ROUND-BY-<span>ROUND</span></div>
+      <div class="rounds-grid">
+        <div class="round-card"><div class="round-head"><div class="round-num">R1</div><div class="round-focus">Best Elite</div></div><div class="round-body"><strong>Best player available.</strong> Picks 1-3: Witt/Acuña/Yordan. Don't reach for position. If elite SP falls (Skenes/Skubal), take it.</div></div>
+        <div class="round-card"><div class="round-head"><div class="round-num">R2</div><div class="round-focus">SS or 1B/OF</div></div><div class="round-body"><strong>Last clean SS shot.</strong> Gunnar, Seager, Neto. Otherwise elite 1B (Vladdy, Kurtz) or top OF (Tucker, Julio).</div></div>
+        <div class="round-card"><div class="round-head"><div class="round-num">R3</div><div class="round-focus">Fill the gap</div></div><div class="round-body"><strong>Patch what you missed.</strong> Trae Turner = last early SS. Olson/Devers if 1B open. Crochet/Yamamoto if still there.</div></div>
+        <div class="round-card"><div class="round-head"><div class="round-num">R4</div><div class="round-focus">Elite SP or OF</div></div><div class="round-body"><strong>Lock in top SP</strong> (Fried, Gausman, Cole). Mookie Betts interesting with SS elig. Power/speed OF bats.</div></div>
+        <div class="round-card"><div class="round-head"><div class="round-num">R5-6</div><div class="round-focus">SB + SP depth</div></div><div class="round-body"><strong>Get SB contributors</strong> if not already (2 minimum). Build SP depth. Consider first elite closer here.</div></div>
+        <div class="round-card"><div class="round-head"><div class="round-num">R7-8</div><div class="round-focus">2B / 3B / OF</div></div><div class="round-body"><strong>Fill 2B now.</strong> McLain, Torres, Stott are great value. Add 3rd OF if needed. Second closer.</div></div>
+        <div class="round-card"><div class="round-head"><div class="round-num">R9-11</div><div class="round-focus">SP streaming</div></div><div class="round-body"><strong>Load mid-tier SPs</strong> for QS/ERA. Luzardo, Ragans, Eovaldi. Add bench bat with upside.</div></div>
+        <div class="round-card"><div class="round-head"><div class="round-num">R12+</div><div class="round-focus">C + Sleepers</div></div><div class="round-body"><strong>Grab catcher now.</strong> Ben Rice, Rutschman, Will Smith at discount. Swing for sleepers: Wilson, Durbin, Wynn.</div></div>
+      </div>
+    </div>
+
+  </div><!-- /board -->
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sidebar-tabs">
+      <button class="tab-btn active" onclick="switchTab('roster')">MY ROSTER</button>
+      <button class="tab-btn" onclick="switchTab('chat')">AI DRAFT CHAT</button>
+    </div>
+
+    <!-- ROSTER TAB -->
+    <div class="tab-content active" id="tab-roster">
+      <div class="roster-list" id="roster-list">
+        <div class="roster-header">BATTING</div>
+        <div class="roster-slot"><span class="slot-pos">C</span><span class="slot-name empty" id="slot-C">empty</span></div>
+        <div class="roster-slot"><span class="slot-pos">1B</span><span class="slot-name empty" id="slot-1B">empty</span></div>
+        <div class="roster-slot"><span class="slot-pos">2B</span><span class="slot-name empty" id="slot-2B">empty</span></div>
+        <div class="roster-slot"><span class="slot-pos">3B</span><span class="slot-name empty" id="slot-3B">empty</span></div>
+        <div class="roster-slot"><span class="slot-pos">SS</span><span class="slot-name empty" id="slot-SS">empty</span></div>
+        <div class="roster-slot"><span class="slot-pos">OF</span><span class="slot-name empty" id="slot-OF1">empty</span></div>
+        <div class="roster-slot"><span class="slot-pos">OF</span><span class="slot-name empty" id="slot-OF2">empty</span></div>
+        <div class="roster-slot"><span class="slot-pos">OF</span><span class="slot-name empty" id="slot-OF3">empty</span></div>
+        <div class="roster-slot"><span class="slot-pos">UTL</span><span class="slot-name empty" id="slot-UTL1">empty</span></div>
+        <div class="roster-slot"><span class="slot-pos">UTL</span><span class="slot-name empty" id="slot-UTL2">empty</span></div>
+        <div class="roster-header">PITCHING</div>
+        <div class="roster-slot"><span class="slot-pos">SP</span><span class="slot-name empty" id="slot-SP1">empty</span></div>
+        <div class="roster-slot"><span class="slot-pos">SP</span><span class="slot-name empty" id="slot-SP2">empty</span></div>
+        <div class="roster-slot"><span class="slot-pos">RP</span><span class="slot-name empty" id="slot-RP1">empty</span></div>
+        <div class="roster-slot"><span class="slot-pos">RP</span><span class="slot-name empty" id="slot-RP2">empty</span></div>
+        <div class="roster-slot"><span class="slot-pos">P</span><span class="slot-name empty" id="slot-P1">empty</span></div>
+        <div class="roster-slot"><span class="slot-pos">P</span><span class="slot-name empty" id="slot-P2">empty</span></div>
+        <div class="roster-slot"><span class="slot-pos">P</span><span class="slot-name empty" id="slot-P3">empty</span></div>
+        <div class="roster-slot"><span class="slot-pos">P</span><span class="slot-name empty" id="slot-P4">empty</span></div>
+        <div class="roster-header">BENCH / IL</div>
+        <div class="roster-slot"><span class="slot-pos">BN</span><span class="slot-name empty" id="slot-BN1">empty</span></div>
+        <div class="roster-slot"><span class="slot-pos">BN</span><span class="slot-name empty" id="slot-BN2">empty</span></div>
+        <div class="roster-slot"><span class="slot-pos">BN</span><span class="slot-name empty" id="slot-BN3">empty</span></div>
+        <div class="roster-slot"><span class="slot-pos">BN</span><span class="slot-name empty" id="slot-BN4">empty</span></div>
+        <div class="roster-slot"><span class="slot-pos">IL</span><span class="slot-name empty" id="slot-IL1">empty</span></div>
+        <div class="roster-slot"><span class="slot-pos">IL</span><span class="slot-name empty" id="slot-IL2">empty</span></div>
+        <div class="roster-slot"><span class="slot-pos">IL</span><span class="slot-name empty" id="slot-IL3">empty</span></div>
+        <div class="roster-slot"><span class="slot-pos">IL</span><span class="slot-name empty" id="slot-IL4">empty</span></div>
+      </div>
+    </div>
+
+    <!-- CHAT TAB -->
+    <div class="tab-content" id="tab-chat" style="flex-direction:column;">
+      <div class="chat-area" id="chat-area">
+        <div class="chat-msg ai">
+          <div class="chat-sender">Draft AI</div>
+          <div class="chat-bubble">Hey! I'm your live draft assistant. Ask me anything — who to target at a specific pick, whether to reach for a position, sleeper callouts, or head-to-head matchup advice. I know your league settings and your partner's notes. Let's win this thing. 🎯</div>
+        </div>
+      </div>
+
+      <div class="quick-qs">
+        <div class="quick-q-label">Quick Questions</div>
+        <button class="quick-q-btn" onclick="sendQuick(this)">Who should I take at pick 5?</button>
+        <button class="quick-q-btn" onclick="sendQuick(this)">Best SB sources available?</button>
+        <button class="quick-q-btn" onclick="sendQuick(this)">When should I grab my first closer?</button>
+        <button class="quick-q-btn" onclick="sendQuick(this)">SS or SP in round 2?</button>
+      </div>
+
+      <div class="chat-input-row">
+        <textarea class="chat-input" id="chat-input" placeholder="Ask a draft question..." rows="1"></textarea>
+        <button class="send-btn" id="send-btn" onclick="sendChat()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="22" y1="2" x2="11" y2="13"></line>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── PLAYER DATA ──
+const playerPositions = {
+  witt:'SS', gunnar:'SS', seager:'SS', neto:'SS', tturner:'SS', volpe:'SS',
+  lindor:'SS', mookie:'SS', jwilson:'SS', wynn:'SS', tovar:'SS', story:'SS', abrams:'SS',
+  yordan:'OF', julio:'OF', tucker:'OF', acuna:'OF', greene:'OF', harris:'OF',
+  aroz:'OF', yelich:'OF', robert:'OF', laureano:'OF', burleson:'OF', lile:'OF',
+  vladdy:'1B', kurtz:'1B', alonso:'1B', olson:'1B', devers:'1B', harper:'1B',
+  freeman:'1B', vp:'1B', soder:'1B', burger:'1B', wcontreras:'1B', naylor:'1B',
+  jram:'3B', caminero:'3B', riley:'3B', garcia3b:'3B', chapman3b:'3B',
+  paredes:'3B', rlewis:'3B', durbin:'3B', vargas3b:'3B', bregman:'3B', suarez3b:'3B',
+  marte2b:'2B', jazz:'2B', turang:'2B', holliday:'2B', stott:'2B', mclain:'2B',
+  torres:'2B', ozzie:'2B', semien:'2B', altuve:'2B', edwards2b:'2B',
+  raleigh:'C', wcontreras2:'C', benrice:'C', rutsch:'C', shea:'C', ydiaz:'C',
+  moreno:'C', wsmith:'C', awells:'C', jeffers:'C', goodman:'C', jensen:'C',
+  skenes:'SP', skubal:'SP', yamamoto:'SP', crochet:'SP', cole:'SP', fried:'SP',
+  gausman:'SP', webb:'SP', valdez:'SP', luzardo:'SP', ragans:'SP', eovaldi:'SP',
+  chandler:'SP', boyd:'SP', trogers:'SP',
+  ediaz:'RP', mmiller:'RP', munoz:'RP', duran:'RP', dWilliams:'RP',
+  achapman:'RP', csmith:'RP', rwalker:'RP', rsuarez:'RP'
+};
+
+const playerStates = {};
+let totalPlayers = 0;
+
+// ── ROSTER TRACKING ──
+const rosterSlots = {
+  C:['slot-C'], '1B':['slot-1B'], '2B':['slot-2B'], '3B':['slot-3B'],
+  SS:['slot-SS'], OF:['slot-OF1','slot-OF2','slot-OF3'],
+  SP:['slot-SP1','slot-SP2'], RP:['slot-RP1','slot-RP2'],
+  P:['slot-P1','slot-P2','slot-P3','slot-P4'],
+  BN:['slot-BN1','slot-BN2','slot-BN3','slot-BN4'],
+  UTL:['slot-UTL1','slot-UTL2'],
+  IL:['slot-IL1','slot-IL2','slot-IL3','slot-IL4']
+};
+
+function addToRoster(name, pos) {
+  // primary position slots
+  const primarySlots = rosterSlots[pos] || [];
+  for (const slotId of primarySlots) {
+    const el = document.getElementById(slotId);
+    if (el && el.classList.contains('empty')) {
+      el.textContent = name;
+      el.classList.remove('empty');
+      el.classList.add('filled');
+      return;
+    }
+  }
+  // try UTL for hitters
+  if (['C','1B','2B','3B','SS','OF'].includes(pos)) {
+    for (const slotId of rosterSlots['UTL']) {
+      const el = document.getElementById(slotId);
+      if (el && el.classList.contains('empty')) {
+        el.textContent = name + ' (' + pos + ')';
+        el.classList.remove('empty');
+        el.classList.add('filled');
+        return;
+      }
+    }
+  }
+  // try P for pitchers
+  if (['SP','RP'].includes(pos)) {
+    for (const slotId of rosterSlots['P']) {
+      const el = document.getElementById(slotId);
+      if (el && el.classList.contains('empty')) {
+        el.textContent = name;
+        el.classList.remove('empty');
+        el.classList.add('filled');
+        return;
+      }
+    }
+  }
+  // bench
+  for (const slotId of rosterSlots['BN']) {
+    const el = document.getElementById(slotId);
+    if (el && el.classList.contains('empty')) {
+      el.textContent = name + ' (' + pos + ')';
+      el.classList.remove('empty');
+      el.classList.add('filled');
+      return;
+    }
+  }
+}
+
+function removeFromRoster(name, pos) {
+  // search all slots
+  const allSlots = Object.values(rosterSlots).flat();
+  for (const slotId of allSlots) {
+    const el = document.getElementById(slotId);
+    if (el && (el.textContent === name || el.textContent.startsWith(name + ' ('))) {
+      el.textContent = 'empty';
+      el.classList.add('empty');
+      el.classList.remove('filled');
+      return;
+    }
+  }
+}
+
+// ── PLAYER CLICK ──
+function initPlayers() {
+  const players = document.querySelectorAll('.player[data-id]');
+  totalPlayers = players.length;
+  players.forEach(el => {
+    playerStates[el.dataset.id] = 0;
+    el.addEventListener('click', () => togglePlayer(el));
+  });
+  updateStats();
+}
+
+function togglePlayer(el) {
+  const id = el.dataset.id;
+  const name = el.querySelector('.player-name').textContent;
+  const pos = playerPositions[id] || 'BN';
+  const current = playerStates[id] || 0;
+  const next = (current + 1) % 3;
+  playerStates[id] = next;
+
+  // remove previous classes
+  el.classList.remove('drafted-other', 'drafted-us');
+
+  if (next === 1) {
+    // gone — drafted by another team
+    el.classList.add('drafted-other');
+  } else if (next === 2) {
+    // ours
+    el.classList.remove('drafted-other');
+    el.classList.add('drafted-us');
+    addToRoster(name, pos);
+  } else {
+    // reset
+    removeFromRoster(name, pos);
+  }
+  updateStats();
+}
+
+function updateStats() {
+  const gone = Object.values(playerStates).filter(v => v === 1).length;
+  const ours = Object.values(playerStates).filter(v => v === 2).length;
+  const avail = totalPlayers - gone - ours;
+  document.getElementById('stat-gone').textContent = gone;
+  document.getElementById('stat-ours').textContent = ours;
+  document.getElementById('stat-avail').textContent = avail;
+}
+
+// ── TABS ──
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach((b,i) => {
+    b.classList.toggle('active', (i === 0 && tab === 'roster') || (i === 1 && tab === 'chat'));
+  });
+  document.getElementById('tab-roster').classList.toggle('active', tab === 'roster');
+  document.getElementById('tab-chat').classList.toggle('active', tab === 'chat');
+}
+
+// ── CHAT ──
+const SYSTEM_PROMPT = `You are an expert fantasy baseball draft assistant for a 10-team H2H Yahoo league. You ONLY discuss this draft. Keep answers tight and direct — 3-5 sentences max unless a list genuinely helps.
+
+League settings:
+- Batting cats: R, HR, RBI, SB, AVG, OPS (OPS is separate from AVG — double value for contact/power hitters)
+- Pitching cats: W, SV, K, ERA, WHIP, QS
+- Roster: C, 1B, 2B, 3B, SS, OF, OF, OF, Util, Util, SP, SP, RP, RP, P, P, P, P, BN x4, IL x4
+- Max 5 acquisitions/week, min 20 IP/week
+
+Draft philosophy from partner's notes:
+- SS is a PANIC position — get top 4-5 early or wait past pick 100
+- NO Lindor, NO CJ Abrams — prefer Gunnar, Neto, Trae Turner
+- Jacob Wilson loved as SS sleeper
+- 1B top tier: Vladdy, Kurtz, Alonso. Tier 2: Olson (best value), Devers, Harper, Freeman
+- 3B: Love J. Ramirez R1. Can wait otherwise. Chapman/Paredes safe. Fade Bregman/Suarez
+- 2B: Ketel Marte and Jazz top. CAN WAIT. McLain best value. Don't panic.
+- C: WAIT almost no matter what. Ben Rice, Rutschman, Will Smith as late sleepers
+- Sleepers: Jacob Wilson (SS), Mason Wynn, Tovar, Caleb Durbin, McLain, Torres, Ozzie Albies
+- Busts: CJ Abrams, Trevor Story, Bregman, Josh Naylor, Xavier Edwards
+
+Additional intel:
+- Luis Robert Jr. moved to Mets (30+ HR upside upgrade), Randy Arozarena had 27HR/31SB
+- Matthew Boyd (Cubs SP) had 14 wins 2025, very low ADP — sleeper
+- Cade Smith is Guardians closer with 40+ SV upside (Clase suspended)
+- OPS as separate cat makes contact/power bats like Yordan, Tucker, Freeman especially valuable
+
+Respond like a smart friend who knows baseball. Be opinionated. Don't hedge everything.`;
+
+let chatHistory = [];
+let isTyping = false;
+
+function appendMsg(role, text) {
+  const area = document.getElementById('chat-area');
+  const div = document.createElement('div');
+  div.className = 'chat-msg ' + role;
+  const sender = document.createElement('div');
+  sender.className = 'chat-sender';
+  sender.textContent = role === 'user' ? 'You' : 'Draft AI';
+  const bubble = document.createElement('div');
+  bubble.className = 'chat-bubble';
+  bubble.textContent = text;
+  div.appendChild(sender);
+  div.appendChild(bubble);
+  area.appendChild(div);
+  area.scrollTop = area.scrollHeight;
+}
+
+function showTyping() {
+  const area = document.getElementById('chat-area');
+  const div = document.createElement('div');
+  div.className = 'chat-msg ai';
+  div.id = 'typing-indicator';
+  const sender = document.createElement('div');
+  sender.className = 'chat-sender';
+  sender.textContent = 'Draft AI';
+  const bubble = document.createElement('div');
+  bubble.className = 'typing-indicator';
+  bubble.innerHTML = '<div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>';
+  div.appendChild(sender);
+  div.appendChild(bubble);
+  area.appendChild(div);
+  area.scrollTop = area.scrollHeight;
+}
+
+function hideTyping() {
+  const el = document.getElementById('typing-indicator');
+  if (el) el.remove();
+}
+
+async function sendChat() {
+  const input = document.getElementById('chat-input');
+  const btn = document.getElementById('send-btn');
+  const text = input.value.trim();
+  if (!text || isTyping) return;
+
+  // switch to chat tab if not there
+  switchTab('chat');
+
+  input.value = '';
+  input.style.height = '38px';
+  appendMsg('user', text);
+  chatHistory.push({ role: 'user', content: text });
+
+  isTyping = true;
+  btn.disabled = true;
+  showTyping();
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: SYSTEM_PROMPT,
+        messages: chatHistory
+      })
+    });
+
+    const data = await res.json();
+    hideTyping();
+
+    const reply = data.content?.find(b => b.type === 'text')?.text || 'Sorry, something went wrong.';
+    appendMsg('ai', reply);
+    chatHistory.push({ role: 'assistant', content: reply });
+
+  } catch (err) {
+    hideTyping();
+    appendMsg('ai', 'Network error — check connection and try again.');
+  }
+
+  isTyping = false;
+  btn.disabled = false;
+}
+
+function sendQuick(btn) {
+  const q = btn.textContent;
+  const input = document.getElementById('chat-input');
+  input.value = q;
+  sendChat();
+}
+
+// Enter to send
+document.addEventListener('DOMContentLoaded', () => {
+  initPlayers();
+
+  const input = document.getElementById('chat-input');
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendChat();
+    }
+  });
+
+  // auto-resize textarea
+  input.addEventListener('input', () => {
+    input.style.height = '38px';
+    input.style.height = Math.min(input.scrollHeight, 100) + 'px';
+  });
+});
+</script>
+</body>
+</html>
